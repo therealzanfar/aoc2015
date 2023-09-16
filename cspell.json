@@ -1,14 +1,15 @@
 {
     "words": [
         "aoc2015",
-        "Matthew",
-        "Wyant",
-        "rgxs",
-        "pytest",
-        "pylint",
-        "mypy",
+        "aocd",
         "Cookiecutter",
+        "Matthew",
+        "mypy",
+        "pylint",
         "pypackage",
+        "pytest",
+        "rgxs",
+        "Wyant",
         "zanfar"
     ]
 }

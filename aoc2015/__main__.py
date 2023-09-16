@@ -6,6 +6,7 @@ import logging
 import sys
 
 import click
+from click_default_group import DefaultGroup
 from rich.logging import RichHandler
 
 CLICK_CONTEXT = {"help_option_names": ["-h", "--help"]}
@@ -35,7 +36,12 @@ def setup_logging(verbosity: int = 0) -> None:
     )
 
 
-@click.command(context_settings=CLICK_CONTEXT)
+@click.group(
+    cls=DefaultGroup,
+    default="day",
+    default_if_no_args=True,
+    context_settings=CLICK_CONTEXT,
+)
 @click.option("-v", "--verbose", count=True)
 def cli(verbose: int = 0) -> int:
     """CLI Entry Point."""
@@ -48,6 +54,23 @@ def cli(verbose: int = 0) -> int:
     )
 
     return 0
+
+
+@click.command()
+@click.argument("PART", nargs=-1)
+def compute_day(part: tuple[str]) -> None:
+    """
+    Compute the final solution for the day.
+
+    PART is the day and part specifier for which solution to compute. The
+      first argument given is assumed to be the day (1-25), and the second is
+      assumed to be the part (a, b). If either is left blank, the most recent
+      part available is computed. If 'ALL' is specified for either argument,
+      then all days or all parts are computed.
+    """
+
+
+cli.add_command(compute_day, name="day")
 
 
 if __name__ == "__main__":
