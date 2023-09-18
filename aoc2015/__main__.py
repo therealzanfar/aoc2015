@@ -115,13 +115,12 @@ def cli(  # noqa: C901, PLR0912
     c = Console(highlight=False)
     rprint = c.print
 
-    for idx, example in enumerate(data):
-        answer = solution(example.input)
+    for _idx, example in enumerate(data):
+        answer = solution(example.input) or 0
         rprint(
             rf"Year [blue]{YEAR}[/blue], "
             rf"Day [blue]{int(day):02d}[/blue], "
             rf"Part [blue]{part.upper()}[/blue]: "
-            rf"\[Test [blue]{idx:02d}[/blue]] "
             rf"Solution=[bright_white]{answer:6d}[/bright_white], ",
             end="",
         )
