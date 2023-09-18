@@ -6,8 +6,19 @@ import logging
 import sys
 
 import click
-from click_default_group import DefaultGroup
+from rich.console import Console
 from rich.logging import RichHandler
+
+from aoc2015.data import (
+    DAY_COUNT_MAX,
+    DAY_COUNT_MIN,
+    PART_NAMES,
+    YEAR,
+    day_parts_with_solutions,
+    days_with_solutions,
+    get_puzzle_inputs,
+    get_puzzle_solution,
+)
 
 CLICK_CONTEXT = {"help_option_names": ["-h", "--help"]}
 
@@ -36,15 +47,32 @@ def setup_logging(verbosity: int = 0) -> None:
     )
 
 
-@click.group(
-    cls=DefaultGroup,
-    default="day",
-    default_if_no_args=True,
-    context_settings=CLICK_CONTEXT,
+@click.command(context_settings=CLICK_CONTEXT)
+@click.argument("DAY", required=False, default="")
+@click.argument("PART", required=False, default="")
+@click.option(
+    "--test",
+    "-t",
+    is_flag=True,
+    flag_value=True,
+    default=False,
+    type=bool,
+    help="Processes the example inputs instead of the user input",
 )
 @click.option("-v", "--verbose", count=True)
-def cli(verbose: int = 0) -> int:
-    """CLI Entry Point."""
+def cli(  # noqa: C901, PLR0912
+    day: str = "",
+    part: str = "",
+    test: bool = False,
+    verbose: int = 0,
+) -> int:
+    """
+    Compute the solution for a given day's problem.
+
+    DAY (1-25) and PART (A, B) select which problem to compute the solution
+    to. If omitted, the system will attempt to identify the most recent,
+    finished solution and compute that.
+    """
     args = locals().items()
     setup_logging(verbose)
     logger = logging.getLogger(__name__)
@@ -53,24 +81,68 @@ def cli(verbose: int = 0) -> int:
         ", ".join(f"{k!s}={v!r}" for k, v in args),
     )
 
+    available_days = days_with_solutions()
+    if len(available_days) < 1:
+        raise click.ClickException("No days have solutions to compute")
+
+    if day == "":
+        day = available_days[-1]
+        logger.info("Choosing most recent day, %s", day)
+
+    try:
+        day = int(day)
+    except ValueError as e:
+        raise click.ClickException(f"Invalid DAY selection: {day}") from e
+
+    if day < DAY_COUNT_MIN or day > DAY_COUNT_MAX:
+        raise click.ClickException(f"Invalid DAY value: {day}")
+
+    available_parts = day_parts_with_solutions(day)
+    if len(available_parts) < 1:
+        raise click.ClickException("Day %s has no solutions to compute", day)
+
+    part = part.upper()
+    if part == "":
+        part = available_parts[-1].upper()
+        logger.info("Choosing day %s most recent part, %s", day, part)
+
+    if part not in PART_NAMES:
+        raise click.ClickException(f"Invalid PART selection: {part}")
+
+    data = get_puzzle_inputs(day, part, test)
+    solution = get_puzzle_solution(day, part)
+
+    c = Console(highlight=False)
+    rprint = c.print
+
+    for idx, example in enumerate(data):
+        answer = solution(example.input)
+        rprint(
+            rf"Year [blue]{YEAR}[/blue], "
+            rf"Day [blue]{int(day):02d}[/blue], "
+            rf"Part [blue]{part.upper()}[/blue]: "
+            rf"\[Test [blue]{idx:02d}[/blue]] "
+            rf"Solution=[bright_white]{answer:6d}[/bright_white], ",
+            end="",
+        )
+
+        if test:
+            expected = example.solution
+
+            rprint(
+                rf"Expected=[bright_white]{expected:6d}[/bright_white]",
+                end="",
+            )
+
+            if answer == expected:
+                rprint(r"   [green]\[CORRECT][/green]")
+            else:
+                rprint(r"   [red]\[WRONG][/red]")
+
+        else:
+            print()
+
     return 0
-
-
-@click.command()
-@click.argument("PART", nargs=-1)
-def compute_day(part: tuple[str]) -> None:
-    """
-    Compute the final solution for the day.
-
-    PART is the day and part specifier for which solution to compute. The
-      first argument given is assumed to be the day (1-25), and the second is
-      assumed to be the part (a, b). If either is left blank, the most recent
-      part available is computed. If 'ALL' is specified for either argument,
-      then all days or all parts are computed.
-    """
-
-
-cli.add_command(compute_day, name="day")
 
 
 if __name__ == "__main__":
