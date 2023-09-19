@@ -22,6 +22,8 @@ from aoc2015.data import (
 
 CLICK_CONTEXT = {"help_option_names": ["-h", "--help"]}
 
+ANSWER_FORMAT = "7d"
+
 
 def setup_logging(verbosity: int = 0) -> None:
     """
@@ -121,7 +123,7 @@ def cli(  # noqa: C901, PLR0912
             rf"Year [blue]{YEAR}[/blue], "
             rf"Day [blue]{int(day):02d}[/blue], "
             rf"Part [blue]{part.upper()}[/blue]: "
-            rf"Solution=[bright_white]{answer:6d}[/bright_white], ",
+            rf"Solution=[bright_white]{answer:{ANSWER_FORMAT}}[/bright_white], ",
             end="",
         )
 
@@ -129,7 +131,7 @@ def cli(  # noqa: C901, PLR0912
             expected = example.solution
 
             rprint(
-                rf"Expected=[bright_white]{expected:6d}[/bright_white]",
+                rf"Expected=[bright_white]{expected:{ANSWER_FORMAT}}[/bright_white]",
                 end="",
             )
 
